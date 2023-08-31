@@ -7,6 +7,12 @@
 
 Inspired by the [`request` package](https://github.com/request/request).
 
+## Fork Notes
+
+- Update timing mechanism to use a monotonic clock: [performance.now()](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now).
+- Change module type to CommonJS
+- Update Node.JS to 18
+
 ## Installation
 
 NPM:
