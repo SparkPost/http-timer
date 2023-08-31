@@ -1,6 +1,6 @@
 {
 	"name": "@sparkpost/http-timer",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Timings for HTTP requests",
 	"exports": "./dist/source/index.js",
 	"engines": {
