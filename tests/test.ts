@@ -5,6 +5,7 @@ import http, {ClientRequest, IncomingMessage} from 'node:http';
 import https from 'node:https';
 import {AddressInfo} from 'node:net';
 import util from 'node:util';
+import {performance} from 'node:perf_hooks';
 import pEvent from 'p-event';
 import test from 'ava';
 import http2 from 'http2-wrapper';
@@ -242,7 +243,7 @@ test('doesn\'t throw when someone used `.prependOnceListener()`', t => {
 
 test('sensible timings', async t => {
 	const {timings, request} = makeRequest('https://google.com');
-	const now = Date.now();
+	const now = performance.now();
 
 	const response: IncomingMessage = await pEvent(request, 'response');
 	response.resume();

@@ -3,6 +3,7 @@ import {types} from 'util';
 import type {EventEmitter} from 'events';
 import type {Socket} from 'net';
 import type {ClientRequest, IncomingMessage} from 'http';
+import {performance} from 'perf_hooks';
 import deferToConnect from 'defer-to-connect';
 
 export interface Timings {
@@ -42,7 +43,7 @@ const timer = (request: ClientRequestWithTimings): Timings => {
 	}
 
 	const timings: Timings = {
-		start: Date.now(),
+		start: performance.now(),
 		socket: undefined,
 		lookup: undefined,
 		connect: undefined,
@@ -68,7 +69,7 @@ const timer = (request: ClientRequestWithTimings): Timings => {
 
 	const handleError = (origin: EventEmitter): void => {
 		origin.once(errorMonitor, () => {
-			timings.error = Date.now();
+			timings.error = performance.now();
 			timings.phases.total = timings.error - timings.start;
 		});
 	};
@@ -76,14 +77,14 @@ const timer = (request: ClientRequestWithTimings): Timings => {
 	handleError(request);
 
 	const onAbort = (): void => {
-		timings.abort = Date.now();
+		timings.abort = performance.now();
 		timings.phases.total = timings.abort - timings.start;
 	};
 
 	request.prependOnceListener('abort', onAbort);
 
 	const onSocket = (socket: Socket): void => {
-		timings.socket = Date.now();
+		timings.socket = performance.now();
 		timings.phases.wait = timings.socket - timings.start;
 
 		if (types.isProxy(socket)) {
@@ -91,7 +92,7 @@ const timer = (request: ClientRequestWithTimings): Timings => {
 		}
 
 		const lookupListener = (): void => {
-			timings.lookup = Date.now();
+			timings.lookup = performance.now();
 			timings.phases.dns = timings.lookup - timings.socket!;
 		};
 
@@ -99,7 +100,7 @@ const timer = (request: ClientRequestWithTimings): Timings => {
 
 		deferToConnect(socket, {
 			connect: () => {
-				timings.connect = Date.now();
+				timings.connect = performance.now();
 
 				if (timings.lookup === undefined) {
 					socket.removeListener('lookup', lookupListener);
@@ -110,7 +111,7 @@ const timer = (request: ClientRequestWithTimings): Timings => {
 				timings.phases.tcp = timings.connect - timings.lookup;
 			},
 			secureConnect: () => {
-				timings.secureConnect = Date.now();
+				timings.secureConnect = performance.now();
 				timings.phases.tls = timings.secureConnect - timings.connect!;
 			},
 		});
@@ -123,7 +124,7 @@ const timer = (request: ClientRequestWithTimings): Timings => {
 	}
 
 	const onUpload = (): void => {
-		timings.upload = Date.now();
+		timings.upload = performance.now();
 		timings.phases.request = timings.upload - (timings.secureConnect ?? timings.connect!);
 	};
 
@@ -134,7 +135,7 @@ const timer = (request: ClientRequestWithTimings): Timings => {
 	}
 
 	request.prependOnceListener('response', (response: IncomingMessageWithTimings): void => {
-		timings.response = Date.now();
+		timings.response = performance.now();
 		timings.phases.firstByte = timings.response - timings.upload!;
 
 		response.timings = timings;
@@ -150,7 +151,7 @@ const timer = (request: ClientRequestWithTimings): Timings => {
 				return;
 			}
 
-			timings.end = Date.now();
+			timings.end = performance.now();
 			timings.phases.download = timings.end - timings.response!;
 			timings.phases.total = timings.end - timings.start;
 		});
